@@ -25,8 +25,17 @@ Each of the templates requires valid region / vpc-id / subnet-id values.  Update
 cd teamcity-server
 
 # if using the vars.json file
-packer build -var-file=teamcity-server.vars.json teamcity-server.json
+packer build `
+    -var-file=teamcity-server.vars.json     
+    teamcity-server.json
 
 # if not using the vars.json file, provide all vars explicitly
-packer build -var "access_key=***" -var "secret_key=***" -var "region=***" -var "vpc_id=***" -var "subnet_id=***" -var "teamcity_version=2017.1.3" teamcity-server.json
+packer build `
+    -var "access_key=***" `
+    -var "secret_key=***" `
+    -var "region=***" `
+    -var "vpc_id=***" `
+    -var "subnet_id=***" `
+    -var "teamcity_version=2017.1.3" `
+    teamcity-server.json
 ```
