@@ -3,8 +3,8 @@
         "access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
         "secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
         "region": "{{env `AWS_DEFAULT_REGION`}}",
-        "vpc_id": "",
-        "subnet_id": "",
+        "vpc_id": "{{env `AWS_VPC_ID`}}",
+        "subnet_id": "{{env `AWS_SUBNET_ID`}}",
         "teamcity_version": "{{env `TEAMCITY_VERSION`}}"
     },
     "builders": [
@@ -12,9 +12,11 @@
             "type": "amazon-ebs",
             "access_key": "{{user `access_key`}}",
             "secret_key": "{{user `secret_key`}}",
+            "region": "{{user `region`}}",
+            "vpc_id": "{{user `vpc_id`}}",
+            "subnet_id": "{{user `subnet_id`}}",
             "ami_name": "teamcity-server",
             "instance_type": "t2.micro",
-            "region": "{{user `region`}}",
             "source_ami_filter": {
                 "filters": {
                     "virtualization-type": "hvm",
@@ -29,8 +31,6 @@
             "force_deregister": true,
             "force_delete_snapshot": true,
             "ssh_username": "ec2-user",
-            "vpc_id": "{{user `vpc_id`}}",
-            "subnet_id": "{{user `subnet_id`}}",
             "tags": {
                 "OS": "Amazon Linux",
                 "Application": "TeamCity"
