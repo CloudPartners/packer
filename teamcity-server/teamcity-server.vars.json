@@ -1,5 +1,8 @@
 {
+  "access_key": "",
+  "secret_key": "",
   "region": "",
   "vpc_id": "",
-  "subnet_id": ""
+  "subnet_id": "",
+  "teamcity_version": "2017.1.3"
 }
