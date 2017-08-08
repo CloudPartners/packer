@@ -1,0 +1,60 @@
+{
+    "variables": {
+        "access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+        "secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+        "region": "{{env `AWS_DEFAULT_REGION`}}",
+        "vpc_id": "",
+        "subnet_id": ""
+    },
+    "builders": [
+        {
+            "type": "amazon-ebs",
+            "access_key": "{{user `access_key`}}",
+            "secret_key": "{{user `secret_key`}}",
+            "ami_name": "teamcity-server",
+            "instance_type": "t2.micro",
+            "region": "{{user `region`}}",
+            "source_ami_filter": {
+                "filters": {
+                    "virtualization-type": "hvm",
+                    "name": "amzn-ami-hvm-*-x86_64-gp2",
+                    "root-device-type": "ebs"
+                },
+                "owners": [
+                    "amazon"
+                ],
+                "most_recent": true
+            },
+            "force_deregister": true,
+            "force_delete_snapshot": true,
+            "ssh_username": "ec2-user",
+            "vpc_id": "{{user `vpc_id`}}",
+            "subnet_id": "{{user `subnet_id`}}",
+            "tags": {
+                "OS": "Amazon Linux",
+                "Application": "TeamCity"
+            }
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "scripts/init.d_teamcity.sh",
+            "destination": "/tmp/teamcity"
+        },
+        {
+            "type": "file",
+            "source": "scripts/nginx.conf",
+            "destination": "/tmp/nginx.conf"
+        },
+        {
+            "type": "shell",
+            "scripts": [
+                "scripts/teamcity-server.sh"
+            ],
+            "environment_vars":[
+                "TEAMCITY_VERSION=2017.1.3"
+            ]
+        }
+    ]
+}
