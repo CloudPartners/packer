@@ -9,7 +9,7 @@
 # Description:       TeamCity
 ### END INIT INFO
 
-TEAMCITY_DATA_PATH="/srv/.BuildServer"
+TEAMCITY_DATA_PATH="/data/.BuildServer"
 
 . /etc/rc.d/init.d/functions
 

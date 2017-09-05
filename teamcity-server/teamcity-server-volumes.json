@@ -4,18 +4,16 @@
         "secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
         "region": "{{env `AWS_DEFAULT_REGION`}}",
         "vpc_id": "{{env `AWS_VPC_ID`}}",
-        "subnet_id": "{{env `AWS_SUBNET_ID`}}",
-        "teamcity_version": "{{env `TEAMCITY_VERSION`}}"
+        "subnet_id": "{{env `AWS_SUBNET_ID`}}"
     },
     "builders": [
         {
-            "type": "amazon-ebs",
+            "type": "amazon-ebsvolume",
             "access_key": "{{user `access_key`}}",
             "secret_key": "{{user `secret_key`}}",
             "region": "{{user `region`}}",
             "vpc_id": "{{user `vpc_id`}}",
             "subnet_id": "{{user `subnet_id`}}",
-            "ami_name": "teamcity-server",
             "instance_type": "c4.xlarge",
             "spot_price": "auto",
             "spot_price_auto_product": "Linux/UNIX",
@@ -30,47 +28,51 @@
                 ],
                 "most_recent": true
             },
-            "force_deregister": true,
-            "force_delete_snapshot": false,
             "ssh_username": "ec2-user",
-            "tags": {
-                "OS": "Amazon Linux",
-                "Application": "TeamCity"
-            },
-            "ami_block_device_mappings": [
+            "ebs_volumes": [
                 {
-                    "snapshot_id": "snap-00972adb95aeb1879",
-                    "device_name": "/dev/xvdf",
                     "volume_type": "gp2",
-                    "delete_on_termination": false
+                    "device_name": "/dev/xvdf",
+                    "delete_on_termination": false,
+                    "volume_size": 12,
+                    "tags": {
+                        "zpool": "data",
+                        "Name": "TeamCity Data"
+                    }
                 },
                 {
-                    "snapshot_id": "snap-04c918292dda42f71",
-                    "device_name": "/dev/xvdg",
                     "volume_type": "gp2",
-                    "delete_on_termination": false
-                }
+                    "device_name": "/dev/xvdg",
+                    "delete_on_termination": false,
+                    "volume_size": 12,
+                    "tags": {
+                        "zpool": "data",
+                        "Name": "TeamCity Artifacts"
+                    }
+                }                
             ]
         }
     ],
     "provisioners": [
         {
             "type": "file",
-            "source": "scripts/init.d_teamcity.sh",
-            "destination": "/tmp/teamcity"
+            "source": "config/database.properties",
+            "destination": "/tmp/database.properties"
         },
         {
             "type": "file",
-            "source": "scripts/nginx.conf",
-            "destination": "/tmp/nginx.conf"
+            "source": "config/project-config.xml",
+            "destination": "/tmp/project-config.xml"
+        },
+        {
+            "type": "file",
+            "source": "config/main-config.xml",
+            "destination": "/tmp/main-config.xml"
         },
         {
             "type": "shell",
             "scripts": [
-                "scripts/teamcity-server.sh"
-            ],
-            "environment_vars": [
-                "TEAMCITY_VERSION={{user `teamcity_version`}}"
+                "scripts/teamcity-server-volumes.sh"
             ]
         }
     ]

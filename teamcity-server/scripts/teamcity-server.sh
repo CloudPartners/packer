@@ -11,33 +11,32 @@ sudo yum install -y nginx
 sudo yum remove -y java
 sudo yum install -y java-1.8.0-openjdk-headless
 
+sudo cp /etc/fstab /etc/fstab.orig
+
+sudo mkdir /data
+echo "/dev/xvdf /data ext4 defaults,nofail 0 2" | sudo tee --append /etc/fstab
+
+sudo mkdir /artifacts
+echo "/dev/xvdg /artifacts ext4 defaults,nofail 0 2" | sudo tee --append /etc/fstab
+
 # install team city
 echo "Installing TeamCity $TEAMCITY_VERSION"
 
 sudo wget -nv -c https://download.jetbrains.com/teamcity/TeamCity-$TEAMCITY_VERSION.tar.gz -O /tmp/TeamCity.tar.gz
 sudo tar -xvf /tmp/TeamCity.tar.gz -C /srv
 sudo rm -rf /tmp/TeamCity.tar.gz
-sudo mkdir /srv/.BuildServer
 
 # create user
 sudo useradd -m teamcity
-sudo chown -R teamcity /srv/TeamCity
-sudo chown -R teamcity /srv/.BuildServer
 
 # create init.d script
 sudo cp /tmp/teamcity /etc/init.d/teamcity
 sudo chmod 775 /etc/init.d/teamcity
-sudo chkconfig teamcity on
-
-# download postgres
-sudo mkdir -p /srv/.BuildServer/lib/jdbc
-sudo mkdir -p /srv/.BuildServer/config
-#sudo wget http://jdbc.postgresql.org/download/postgresql-9.3-1101.jdbc41.jar -O /srv/.BuildServer/lib/jdbc/postgresql-9.3-1101.jdbc41.jar
-#sudo wget https://gist.githubusercontent.com/sandcastle/9282638/raw/postgres.database.properties -O /srv/.BuildServer/config/database.properties
 
 # ensure owership
-sudo chown -R teamcity /srv/TeamCity
-sudo chown -R teamcity /srv/.BuildServer
+sudo chown -R teamcity:teamcity /srv/TeamCity
+sudo chown -R teamcity:teamcity /data
+sudo chown -R teamcity:teamcity /artifacts
 
 # proxy port 80 to 8111
 sudo cp /tmp/nginx.conf /etc/nginx/nginx.conf
