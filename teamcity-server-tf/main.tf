@@ -1,8 +1,3 @@
-variable "aws_region" {
-  description = "AWS region to create resources in"
-  default     = "eu-west-1"
-}
-
 provider "aws" {
   region  = "${var.aws_region}"
   profile = "default"
@@ -15,7 +10,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["teamcity-server"]
+    values = ["teamcity-server-*"]
   }
 
   filter {
@@ -102,6 +97,67 @@ resource "aws_spot_instance_request" "teamcity" {
   user_data              = "${data.template_file.teamcity_server.rendered}"
 
   tags {
-    Name = "TeamCity"
+    Name = "TeamCity Server"
   }
+}
+
+data "aws_instance" "teamcity" {
+  filter {
+    name   = "spot-instance-request-id"
+    values = ["${aws_spot_instance_request.teamcity.id}"]
+  }
+}
+
+data "aws_ebs_snapshot" "ebs_snapshot_data" {
+  most_recent = true
+  owners      = ["self"]
+
+  filter {
+    name   = "tag:Name"
+    values = ["TeamCity Data"]
+  }
+}
+
+resource "aws_ebs_volume" "ebs_volume_data" {
+  availability_zone = "eu-west-1a"
+  snapshot_id       = "${data.aws_ebs_snapshot.ebs_snapshot_data.id}"
+  type              = "gp2"
+
+  tags {
+    Name = "TeamCity Data"
+  }
+}
+
+resource "aws_volume_attachment" "volume_attachment_data" {
+  device_name  = "/dev/xvdf"
+  volume_id    = "${aws_ebs_volume.ebs_volume_data.id}"
+  instance_id  = "${data.aws_instance.teamcity.id}"
+  skip_destroy = true
+}
+
+data "aws_ebs_snapshot" "ebs_snapshot_artifacts" {
+  most_recent = true
+  owners      = ["self"]
+
+  filter {
+    name   = "tag:Name"
+    values = ["TeamCity Artifacts"]
+  }
+}
+
+resource "aws_ebs_volume" "ebs_volume_artifacts" {
+  availability_zone = "eu-west-1a"
+  snapshot_id       = "${data.aws_ebs_snapshot.ebs_snapshot_artifacts.id}"
+  type              = "gp2"
+
+  tags {
+    Name = "TeamCity Artifacts"
+  }
+}
+
+resource "aws_volume_attachment" "volume_attachment_artifacts" {
+  device_name  = "/dev/xvdg"
+  volume_id    = "${aws_ebs_volume.ebs_volume_artifacts.id}"
+  instance_id  = "${data.aws_instance.teamcity.id}"
+  skip_destroy = true
 }
